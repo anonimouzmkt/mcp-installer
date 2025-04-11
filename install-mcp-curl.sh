@@ -40,14 +40,26 @@ if ! command -v node &> /dev/null; then
     apt install -y nodejs npm
 fi
 
+# Solução para entrada interativa quando executado via pipe (curl | bash)
+exec < /dev/tty || true
+
 # Pedir nome do cliente diretamente aqui
 echo -e "${GREEN}Digite o nome do cliente (ex: 'integra'):${NC}"
-read clientName
+read -r clientName
 
-# Validação básica do nome
+# Se /dev/tty não estiver disponível e nenhum nome for fornecido, use um padrão
 if [ -z "$clientName" ]; then
-    echo -e "${RED}Nome do cliente é obrigatório. Saindo.${NC}"
-    exit 1
+    # Verifica se estamos sendo executados por pipe
+    if [ ! -t 0 ]; then
+        echo -e "${YELLOW}Detectado uso via pipe (curl | bash). Solicitando entrada manual...${NC}"
+        echo -e "${YELLOW}Execute o script novamente diretamente:${NC}"
+        echo -e "${GREEN}1. Baixe o script: curl -O https://raw.githubusercontent.com/anonimouzmkt/mcp-installer/main/install-mcp-curl.sh${NC}"
+        echo -e "${GREEN}2. Execute: sudo bash install-mcp-curl.sh${NC}"
+        exit 1
+    else
+        echo -e "${RED}Nome do cliente é obrigatório. Saindo.${NC}"
+        exit 1
+    fi
 fi
 
 # Sanitizar o nome (remover espaços e caracteres especiais)
