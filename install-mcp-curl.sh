@@ -19,34 +19,15 @@ echo "║                                                               ║"
 echo "╚═══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
-# Verificar se está rodando como root
-if [ "$(id -u)" != "0" ]; then
-   echo -e "${RED}Erro: Este script precisa ser executado como root (sudo).${NC}"
-   exit 1
-fi
+# [REMOVIDO] a verificação de TTY
+# if ! [ -t 0 ]; then
+#     ...
+#     exit 0
+# fi
 
-# Verificar se é um terminal interativo
-if ! [ -t 0 ]; then
-    # Estamos rodando via pipe, criamos um script temporário para execução direta
-    echo -e "${YELLOW}Detectada execução via pipe. Baixando e executando script localmente...${NC}"
-    
-    # Criar um script temporário que contém uma cópia deste script
-    TMP_SCRIPT=$(mktemp)
-    curl -s https://raw.githubusercontent.com/anonimouzmkt/mcp-installer/main/install-mcp-curl.sh > "$TMP_SCRIPT"
-    chmod +x "$TMP_SCRIPT"
-    
-    # Executar o script temporário diretamente
-    echo -e "${GREEN}Executando script interativamente...${NC}"
-    bash "$TMP_SCRIPT"
-    
-    # Limpar depois de executar
-    rm -f "$TMP_SCRIPT"
-    exit $?
-fi
-
-# Se chegou aqui, estamos em um terminal interativo
+# Agora, forçamos a leitura do nome do cliente a partir do terminal real.
 echo -e "${GREEN}Digite o nome do cliente (ex: 'integra'):${NC}"
-read -r CLIENT_NAME
+read -r CLIENT_NAME < /dev/tty
 
 # Verificar nome do cliente
 if [ -z "$CLIENT_NAME" ]; then
@@ -134,4 +115,4 @@ echo -e "\n${BLUE}Próximos passos:${NC}"
 echo -e "1. Configure o arquivo .env com as credenciais do cliente"
 echo -e "2. Inicie o servidor MCP com: ${GREEN}cd ${INSTALL_DIR} && npm start${NC}"
 
-exit 0 
+exit 0
