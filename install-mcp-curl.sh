@@ -25,28 +25,26 @@ if [ "$(id -u)" != "0" ]; then
    exit 1
 fi
 
-# Tentar redirecionar entrada para /dev/tty se estiver via pipe
+# Verificar se é um terminal interativo
 if ! [ -t 0 ]; then
-    # Estamos em um pipe, tentar redirecionar para /dev/tty
-    if [ -e /dev/tty ]; then
-        echo -e "${YELLOW}Redirecionando entrada para terminal interativo...${NC}"
-        exec < /dev/tty || {
-            echo -e "${RED}ERRO: Não foi possível redirecionar para /dev/tty${NC}"
-            echo -e "${RED}Por favor, execute o script diretamente:${NC}"
-            echo -e "${GREEN}curl -O https://raw.githubusercontent.com/anonimouzmkt/mcp-installer/main/install-mcp-curl.sh${NC}"
-            echo -e "${GREEN}sudo bash install-mcp-curl.sh${NC}"
-            exit 1
-        }
-    else
-        echo -e "${RED}ERRO: /dev/tty não está disponível. Não é possível solicitar entrada do usuário.${NC}"
-        echo -e "${RED}Por favor, execute o script diretamente:${NC}"
-        echo -e "${GREEN}curl -O https://raw.githubusercontent.com/anonimouzmkt/mcp-installer/main/install-mcp-curl.sh${NC}"
-        echo -e "${GREEN}sudo bash install-mcp-curl.sh${NC}"
-        exit 1
-    fi
+    # Estamos rodando via pipe, criamos um script temporário para execução direta
+    echo -e "${YELLOW}Detectada execução via pipe. Baixando e executando script localmente...${NC}"
+    
+    # Criar um script temporário que contém uma cópia deste script
+    TMP_SCRIPT=$(mktemp)
+    curl -s https://raw.githubusercontent.com/anonimouzmkt/mcp-installer/main/install-mcp-curl.sh > "$TMP_SCRIPT"
+    chmod +x "$TMP_SCRIPT"
+    
+    # Executar o script temporário diretamente
+    echo -e "${GREEN}Executando script interativamente...${NC}"
+    bash "$TMP_SCRIPT"
+    
+    # Limpar depois de executar
+    rm -f "$TMP_SCRIPT"
+    exit $?
 fi
 
-# Sempre perguntar o nome do cliente (ignorar qualquer argumento)
+# Se chegou aqui, estamos em um terminal interativo
 echo -e "${GREEN}Digite o nome do cliente (ex: 'integra'):${NC}"
 read -r CLIENT_NAME
 
